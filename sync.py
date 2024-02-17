@@ -2,6 +2,8 @@ import hashlib
 import logging
 import os
 import shutil
+import sys
+import time
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -37,8 +39,8 @@ def get_replica_src_path(root, obj, source, replica):
 
 
 def get_replica_path(root, obj, source, replica):
-    rep_path = get_replica_src_path(root, obj, source, replica)[1]
-    return rep_path
+    replica_path = get_replica_src_path(root, obj, source, replica)[1]
+    return replica_path
 
 
 def sync_folders(source_folder, replica_folder, purge=False):
@@ -69,10 +71,21 @@ def sync_folders(source_folder, replica_folder, purge=False):
                     logger.info(f"File removed: {replica_path}")
             elif get_hash(source_path) != get_hash(replica_path):
                 shutil.copy2(source_path, replica_path)
+                logger.info(f"File updated: {replica_path}")
 
 
 if __name__ == "__main__":
-    source_folder = "/Users/rpd/Projects/veeam/source"
-    replica_folder = "/Users/rpd/Projects/veeam/replica"
-    sync_folders(source_folder, replica_folder)
-    sync_folders(purge=True, source_folder=replica_folder, replica_folder=source_folder)
+    if len(sys.argv) != 4:
+        print("python3 <source_folder> <replica_folder> <sleep_duration_seconds>")
+        sys.exit(1)
+
+    source_folder = sys.argv[1]
+    replica_folder = sys.argv[2]
+    sleep_duration = int(sys.argv[3])
+
+    while True:
+        sync_folders(source_folder, replica_folder)
+        sync_folders(
+            purge=True, source_folder=replica_folder, replica_folder=source_folder
+        )
+        time.sleep(sleep_duration)
