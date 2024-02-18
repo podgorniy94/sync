@@ -1,3 +1,4 @@
+import getpass
 import hashlib
 import logging
 import os
@@ -80,7 +81,7 @@ def sync_folders(source_folder: str, replica_folder: str, purge: bool = False) -
                     else:
                         file_path = os.path.join(root, file)
                         os.remove(file_path)
-                        logger.info(f"File removed: {replica_path}")
+                        logger.info(f"File removed: {file_path}")
                 elif get_hash(source_path) != get_hash(replica_path):
                     shutil.copy2(source_path, replica_path)
                     logger.info(f"File updated: {replica_path}")
@@ -97,9 +98,14 @@ if __name__ == "__main__":
     replica_folder = sys.argv[2]
     sleep_duration = int(sys.argv[3])
 
-    while True:
-        sync_folders(source_folder, replica_folder)
-        sync_folders(
-            purge=True, source_folder=replica_folder, replica_folder=source_folder
-        )
-        time.sleep(sleep_duration)
+    try:
+        while True:
+            sync_folders(source_folder, replica_folder)
+            sync_folders(
+                purge=True, source_folder=replica_folder, replica_folder=source_folder
+            )
+            time.sleep(sleep_duration)
+    except KeyboardInterrupt:
+        username = getpass.getuser()
+        logger.info(f"Script interrupted by {username}")
+        sys.exit(0)
